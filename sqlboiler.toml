@@ -5,4 +5,4 @@ add-global-variants=false
 no-tests=true
 
 [sqlite3]
-  dbname = "./mygraphql.db"
+  dbname = "mygraphql.db"
