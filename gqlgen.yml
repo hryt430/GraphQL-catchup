@@ -129,6 +129,19 @@ autobind:
 # modelgen, the others will be allowed when binding to fields. Configure them to
 # your liking
 models:
+  Repository:
+    fields:
+      owner:
+        resolver: true
+      issue:
+        resolver: true
+      issues:
+        resolver: true
+      pullRequest:
+        resolver: true
+      pullRequests:
+        resolver: true
+        
   ID:
     model:
       - github.com/99designs/gqlgen/graphql.ID
@@ -163,3 +176,4 @@ models:
   URI:
     model:
       - gql_server/graph/model.URI
+  
