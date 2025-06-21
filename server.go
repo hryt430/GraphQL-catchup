@@ -1,7 +1,12 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
 	"gql_server/graph"
+	"gql_server/graph/services"
+	"gql_server/internal"
+	"gql_server/middleware/auth"
 	"log"
 	"net/http"
 	"os"
@@ -14,7 +19,10 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
-const defaultPort = "8080"
+const (
+	defaultPort = "8080"
+	dbFile      = "./mygraphql.db"
+)
 
 func main() {
 	port := os.Getenv("PORT")
@@ -22,7 +30,21 @@ func main() {
 		port = defaultPort
 	}
 
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	db, err := sql.Open("sqlite3", fmt.Sprintf("%s?_foreign_keys=on", dbFile))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	service := services.New(db)
+	srv := handler.NewDefaultServer(internal.NewExecutableSchema(internal.Config{
+		Resolvers: &graph.Resolver{
+			Srv:     service,
+			Loaders: graph.NewLoaders(service),
+		},
+		Directives: graph.Directive,
+		Complexity: graph.ComplexityConfig(),
+	}))
 
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
@@ -36,7 +58,7 @@ func main() {
 	})
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	http.Handle("/query", auth.AuthMiddleware(srv))
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
