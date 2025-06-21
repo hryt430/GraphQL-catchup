@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"gql_server/internal"
+	"gql_server/middleware/auth"
 
 	"github.com/99designs/gqlgen/graphql"
 )
